@@ -1,0 +1,93 @@
+<!DOCTYPE html>
+
+
+<script src="../libs/aframe-v0.8.2.js"></script>
+<script src="//cdn.rawgit.com/donmccurdy/aframe-extras/v4.2.0/dist/aframe-extras.min.js"></script>
+
+<script src="//unpkg.com/aframe-event-set-component@^4.0.0/dist/aframe-event-set-component.min.js"></script>
+<script src="//unpkg.com/aframe-look-at-component@0.5.1/dist/aframe-look-at-component.min.js"></script>
+<script src="//unpkg.com/aframe-animation-component@^4.1.2/dist/aframe-animation-component.min.js"></script>
+<!-- include aframe-ar.js -->
+<script src="../libs/aframe-ar.js"></script>
+
+<script>
+    AFRAME.registerComponent('follow', {
+        schema: {
+            target: {type: 'selector'}
+        },
+
+        init: function () {
+            //this.following = false;
+            this.el.object3D.visible = false;
+
+            var _this = this;
+            var marker = this.data.target;
+
+            marker.addEventListener('markerFound', function (evt) {
+                _this.following = true;
+                _this.el.object3D.visible = true;
+                _this.el.components.raycaster.enabled = true;
+
+                console.log('markerFound');
+
+            });
+
+            marker.addEventListener('markerLost', function () {
+                _this.following = false;
+                _this.el.object3D.visible = false;
+                _this.el.components.raycaster.enabled = false;
+
+                console.log('markerLost');
+            });
+        },
+
+        tick: function (time, timeDelta) {
+            if (!this.following) return;
+
+            this.data.target.object3D.position.normalize();
+            this.data.target.object3D.position.multiplyScalar(1.6);
+            // Grab position vectors (THREE.Vector3) from the entities' three.js objects.
+            var targetPosition = this.data.target.object3D.getWorldPosition();
+
+            this.el.object3D.position.x = targetPosition.x;
+            this.el.object3D.position.y = targetPosition.y;
+            this.el.object3D.position.z = targetPosition.z;
+            //console.log(this.el.object3D.position);
+        }
+    });
+</script>
+
+<body style='margin : 0px; overflow: hidden; font-family: Monospace;'>
+
+<a-scene embedded arjs='sourceType: webcam; debugUIEnabled: false'>
+    <a-box color="red" position='0 1 -3' height="0.1" width="0.1" depth="0.15"
+           follow="target: a-marker"
+           look-at="a-camera" raycaster="direction: 0 0 1; objects: .menu; showLine:true"
+    ></a-box>
+
+
+    <a-box class="menu" position="-0.25 0.3 -0.5" width="0.1" depth="0.1" height="0.01" color="white"
+           event-set__raycaster-intersected="color: red"
+           event-set__raycaster-intersected-cleared="color: white"
+    ></a-box>
+
+    <a-box class="menu" position="0 0.3 -0.5" width="0.1" depth="0.1" height="0.01" color="white"
+           event-set__raycaster-intersected="color: green"
+           event-set__raycaster-intersected-cleared="color: white"
+    ></a-box>
+
+    <a-box class="menu" position="0.25 0.3 -0.5" width="0.1" depth="0.1" height="0.01" color="white"
+           event-set__raycaster-intersected="color: blue"
+           event-set__raycaster-intersected-cleared="color: white"
+    ></a-box>
+
+
+    <!-- add a simple camera -->
+    <a-camera>
+        <!-- <a-cursor></a-cursor> -->
+        <a-marker type="pattern" url = "../resources/pattern-hiro.patt"  >
+        </a-marker>
+    </a-camera>
+</a-scene>
+</body>
+</html>
